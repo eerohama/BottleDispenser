@@ -21,11 +21,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     private SeekBar seekBar;
     private TextView txtView;
     private TextView printTxt;
-    private Spinner size;
     private Spinner bottles;
     private BottleDispenser BD;
     private ArrayList<Bottle> list;
     private Context context = null;
+    private ArrayList<String> bottlelist;
 
 
     @Override
@@ -38,10 +38,8 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         printTxt = (TextView) findViewById(R.id.printText);
         seekBar = (SeekBar) findViewById(R.id.seekBar);
         txtView = (TextView) findViewById(R.id.txtView);
-        size = (Spinner) findViewById(R.id.spinnerSize);
         bottles = (Spinner)findViewById(R.id.spinnerBottle);
         System.out.println("Osoite: "+context.getFilesDir());
-
         dropdownMenu();
 
 
@@ -68,27 +66,16 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
 
     public void dropdownMenu(){
 
-        /*
-        ArrayList<String> bottlelist = new ArrayList<String>();
+        bottlelist = new ArrayList<String>();
         for(Bottle b : list){
             bottlelist.add(b.getName() + " " + Double.toString(b.getSize()));
         }
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,   android.R.layout.simple_spinner_item, bottlelist);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item); // The drop down view
         bottles.setAdapter(adapter);
-        */
-
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(this,R.array.size, android.R.layout.simple_spinner_item);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        size.setAdapter(adapter);
-        size.setOnItemSelectedListener(this);
-
-        ArrayAdapter<CharSequence> adapter2 = ArrayAdapter.createFromResource(this,R.array.bottles, android.R.layout.simple_spinner_item);
-        adapter2.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        bottles.setAdapter(adapter2);
-        bottles.setOnItemSelectedListener(this);
-
     }
+
+
 
     public void addMoney(View view) {
         int money = seekBar.getProgress();
@@ -99,16 +86,24 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
     }
 
     public void buyBottle(View view){
-        int pos1 = size.getSelectedItemPosition();
+
+
         int pos2 = bottles.getSelectedItemPosition();
-        String koko = size.getItemAtPosition(pos1).toString();
-        double newSize = Double.parseDouble(koko);
-        String name = bottles.getItemAtPosition(pos2).toString();
+        String s = "";
+        try {
+            s = bottles.getItemAtPosition(pos2).toString();
+        } catch(Exception e){
+            Log.e("Exception", "Out of bottles!");
+            printTxt.setText("Out of bottles!");
+            return;
+        }
+        String pullo = s;
         int index = 0;
         boolean available = false;
 
         for(Bottle b : list) {
-            if (b.getName().equals(name) && b.getSize() == newSize) {
+            String str = b.getName() + " " + Double.toString(b.getSize());
+            if (pullo.equals(str)) {
                 available = true;
                 break;
             }
@@ -122,9 +117,11 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         int x = BD.buyBottle(list, index);
         switch(x){
             case 1:
-                printTxt.setText("KACHUNK! "+name+" "+koko+"l came out of the dispenser!");
+                printTxt.setText("KACHUNK! "+pullo+"l came out of the dispenser!");
+                double price = list.get(index).getPrice();
                 list = BD.removeBottle(list,index);
-                writeFile(name, koko);
+                bottlelist.remove(index);
+                writeFile(pullo,price);
                 break;
             case 2:
                 printTxt.setText("Add money first!");
@@ -138,11 +135,12 @@ public class MainActivity extends AppCompatActivity implements AdapterView.OnIte
         BD.returnMoney();
     }
 
-    public void writeFile (String n, String s) {
+    public void writeFile (String s, double p) {
+        String price = Double.toString(p);
         try {
             String file = "kuitti.txt";
-            OutputStreamWriter osw = new OutputStreamWriter(context.openFileOutput(file, Context.MODE_PRIVATE));
-            osw.write("Kuitti:\n" + n + s +"l");
+            OutputStreamWriter osw = new OutputStreamWriter(context.openFileOutput(file, Context.MODE_APPEND));
+            osw.write("Kuitti: "+s+"l "+price+"€\n");
             osw.close();
         } catch (IOException e) {
             Log.e("IOException", "Virhe syötteessä");
