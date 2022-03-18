@@ -1,0 +1,15 @@
+<resources>
+    <string name="app_name">BottleDispenser</string>
+    <string-array name="size">
+        <item>0.5</item>
+        <item>1.5</item>
+    </string-array>
+
+    <string-array name="bottles">
+        <item>Coca-Cola</item>
+        <item>Coca-Cola Zero</item>
+        <item>Fanta</item>
+        <item>Fanta Zero</item>
+        <item>Pepsi Max</item>
+    </string-array>
+</resources>
